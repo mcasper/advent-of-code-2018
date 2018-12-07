@@ -8,6 +8,7 @@ using namespace std;
 std::unordered_map<char,int> group_by_char(vector<char> inputs);
 bool has_twos(std::unordered_map<char,int> input);
 bool has_threes(std::unordered_map<char,int> input);
+bool compare(string input1, string input2);
 
 int main () {
   string line;
@@ -42,7 +43,32 @@ int main () {
     }
   }
 
+  string match1;
+  string match2;
+  for (int i = 0; i < inputs.size(); i++) {
+    string input = inputs[i];
+    if (input == "") {
+      continue;
+    }
+
+    for (int i2 = 0; i2 < inputs.size(); i2++) {
+      string input2 = inputs[i2];
+      if (input2 == "") {
+        continue;
+      }
+
+      bool is_match = compare(input, input2);
+
+      if (is_match) {
+        match1 = input;
+        match2 = input2;
+        break;
+      };
+    }
+  }
+
   cout << "Part 1: " << twos << " * " << threes << " = " << (twos*threes) << std::endl;
+  cout << "Part 2: " << match1 << " and " << match2 << " are one character off." << std::endl;
   return 0;
 }
 
@@ -87,3 +113,19 @@ bool has_threes(std::unordered_map<char,int> input) {
   return has_twos;
 }
 
+bool compare(string input1, string input2) {
+  vector<char> split_string1(input1.begin(), input1.end());
+  vector<char> split_string2(input2.begin(), input2.end());
+
+  int differences = 0;
+  for (int i = 0; i < split_string1.size(); i++) {
+    char char1 = split_string1[i];
+    char char2 = split_string2[i];
+
+    if (char1 != char2) {
+      differences = differences + 1;
+    }
+  }
+
+  return differences == 1;
+}
