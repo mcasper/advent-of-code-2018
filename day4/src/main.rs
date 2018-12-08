@@ -89,10 +89,25 @@ fn main() {
     }
 
     let (k,v) = grouped_minutes.iter().max_by(|(_, av), (_, bv)| av.cmp(&bv)).unwrap();
-    println!("{:?}", guard_most_asleep);
-    println!("{:?}", grouped_minutes);
     if v < &2 {
         panic!("Count of sleep isn't greater than 1");
     }
-    println!("Part 1: Guard {}, Minute: {}, total: {}", guard_most_asleep.id, k, guard_most_asleep.id * *k as i32)
+    println!("Part 1: Guard {}, Minute: {}, total: {}", guard_most_asleep.id, k, guard_most_asleep.id * *k as i32);
+
+    let mut tuples: Vec<(i32, u32, u32)> = vec![];
+    for guard in guards {
+        let mut grouped_minutes: HashMap<u32, u32> = HashMap::new();
+        for minute in guard.minutes.clone() {
+            if grouped_minutes.contains_key(&minute) {
+                grouped_minutes.insert(minute, grouped_minutes.get(&minute).unwrap() + 1);
+            } else {
+                grouped_minutes.insert(minute, 1);
+            }
+        }
+
+        let (k,v) = grouped_minutes.iter().max_by(|(_, av), (_, bv)| av.cmp(&bv)).unwrap_or((&(0 as u32), &(0 as u32)));
+        tuples.push((guard.id.clone(), *k, *v));
+    }
+    let minute_most_asleep  = tuples.iter().max_by(|(_, _, count_a), (_, _, count_b)| count_a.cmp(&count_b)).unwrap();
+    println!("Part 2: Guard {}, Minute: {}, Count: {}, total: {}", minute_most_asleep.0, minute_most_asleep.1, minute_most_asleep.2, minute_most_asleep.0 * minute_most_asleep.1 as i32);
 }
