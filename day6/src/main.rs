@@ -26,39 +26,37 @@ fn main() {
     let max_x = coordinates.iter().max_by(|a, b| a.x.cmp(&b.x)).unwrap().x;
     let max_y = coordinates.iter().max_by(|a, b| a.y.cmp(&b.y)).unwrap().y;
 
-    let mut grid: Vec<Vec<String>> = vec![];
+    let mut safe_region_size = 0;
 
     for y in 0..max_y+2 {
-        let mut row = vec![];
         for x in 0..max_x+2 {
             let coordinate = Coordinate{x: x, y: y, owned_coordinates: 0, infinite: false};
 
             let distances = coordinates.iter().map(|input_coord| manhatten_distance(input_coord, &coordinate)).collect::<Vec<i32>>();
-            let min_distance_index = min_index_without_dup(distances.clone());
+
+            let sum: i32 = distances.clone().iter().sum();
+            if sum < 10_000 {
+                safe_region_size += 1
+            }
+
+            let min_distance_index = min_index_without_dup(distances);
             match min_distance_index {
                 Some(i) => {
                     coordinates[i].owned_coordinates += 1;
                     if coordinate.x == 0 || coordinate.x == max_x || coordinate.y == 0 || coordinate.y == max_y {
                         coordinates[i].infinite = true;
                     }
-                    row.push(i.to_string());
                 },
-                None => {
-                    row.push(".".to_owned());
-                }
+                None => (),
             }
         }
-        grid.push(row);
-    }
-
-    for row in grid {
-        println!("{:?}", row);
     }
 
     let most_territory = coordinates.iter()
         .filter(|coord| !coord.infinite)
         .max_by_key(|coordinate| coordinate.owned_coordinates).unwrap();
     println!("Part 1: {:?}", most_territory);
+    println!("Part 2: {}", safe_region_size);
 }
 
 fn manhatten_distance(a: &Coordinate, b: &Coordinate) -> i32 {
