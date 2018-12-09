@@ -63,4 +63,15 @@ fn main() {
     let input: String = String::from_utf8(fs::read("input.txt").unwrap()).unwrap().trim().to_owned();
     let processed_input = process(input.chars(), 1);
     println!("Part 1: {}", processed_input.chars().count());
+
+    let reacted_polymers: Vec<String> = (0..26).map(|x| (x + 'a' as u8) as char).map(|letter| {
+        let mut copied_input = input.clone();
+        copied_input = copied_input.replace(letter, "");
+        copied_input = copied_input.replace(((letter as u8) - 32) as char, "");
+        println!("Processing {}", letter);
+        process(copied_input.chars(), 0)
+    }).collect();
+
+    let most_efficient_polymer = reacted_polymers.iter().min_by(|a,b| a.len().cmp(&b.len())).unwrap();
+    println!("Part 2: {}", most_efficient_polymer.len());
 }
