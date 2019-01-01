@@ -2,8 +2,8 @@
 
 extern crate regex;
 
-use std::fs;
 use regex::Regex;
+use std::fs;
 
 #[derive(Clone, Debug)]
 struct Step {
