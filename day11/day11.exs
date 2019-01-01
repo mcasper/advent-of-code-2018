@@ -26,31 +26,64 @@ defmodule Day11 do
     end)
   end
 
-  def generate_three_by_threes(grid) do
-    Enum.flat_map(0..297, fn x ->
-      Enum.map(0..297, fn y ->
-        {
-          [
-            grid |> Enum.at(x) |> Enum.at(y),
-            grid |> Enum.at(x+1) |> Enum.at(y),
-            grid |> Enum.at(x+2) |> Enum.at(y),
-            grid |> Enum.at(x) |> Enum.at(y+1),
-            grid |> Enum.at(x+1) |> Enum.at(y+1),
-            grid |> Enum.at(x+2) |> Enum.at(y+1),
-            grid |> Enum.at(x) |> Enum.at(y+2),
-            grid |> Enum.at(x+1) |> Enum.at(y+2),
-            grid |> Enum.at(x+2) |> Enum.at(y+2),
-          ],
-          {x+1,y+1}
-        }
+  def generate_coords() do
+    Enum.flat_map(0..299, fn x ->
+      Enum.map(0..299, fn y ->
+        {x,y}
       end)
+    end)
+  end
+
+  def generate_squares({x,y}) do
+    max_x = 299 - x
+    max_y = 299 - y
+    square_size = Enum.min([max_x, max_y])
+
+    IO.puts("Generating squares for #{x},#{y}")
+
+    Enum.map(0..(square_size-1), fn size ->
+      Enum.map(0..size, fn x_size ->
+        Enum.map(0..size, fn y_size ->
+          {x + x_size, y + y_size}
+        end)
+      end)
+    end)
+  end
+
+  def generate_power_levels(grid, squares) do
+    Task.async_stream(squares, fn rows ->
+      square = List.flatten(rows)
+      top_left = Enum.at(square, 0)
+      size = Enum.count(square) |> :math.sqrt() |> Kernel.trunc()
+      IO.puts("Working on #{elem(top_left, 0)},#{elem(top_left, 1)},#{size}")
+
+      {
+        Enum.map(square, fn {x,y} ->
+          grid |> Enum.at(x) |> Enum.at(y)
+        end),
+        {elem(top_left, 0)+1,elem(top_left, 1)+1},
+        size,
+      }
     end)
   end
 end
 
 # grid_serial_number = 18
+# answer: 90,269,16
 grid_serial_number = 2694
 grid = Day11.generate_power_levels(grid_serial_number)
-three_by_threes = Day11.generate_three_by_threes(grid)
-{three_by_three, {top_left_x, top_left_y}} = Enum.max_by(three_by_threes, fn {grid, _} -> Enum.sum(grid) end)
-IO.puts("#{top_left_x},#{top_left_y}: #{Enum.sum(three_by_three)}")
+coords = Day11.generate_coords()
+
+list_of_list_of_tuples = Enum.map(coords, fn coord ->
+  squares = Day11.generate_squares(coord)
+  Enum.to_list(Day11.generate_power_levels(grid, squares))
+end)
+
+flattened_tuples = Enum.reduce(list_of_list_of_tuples, [], fn list_of_tuples, acc ->
+  acc ++ list_of_tuples
+end)
+
+{:ok, {square, {top_left_x, top_left_y}, square_size}} = Enum.max_by(flattened_tuples, fn {:ok, {power_levels, _, _}} ->
+  Enum.sum(power_levels)
+end)
+IO.puts("#{top_left_x},#{top_left_y},#{square_size}: #{Enum.sum(square)}")
