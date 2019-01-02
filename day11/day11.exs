@@ -64,7 +64,7 @@ defmodule Day11 do
         {elem(top_left, 0)+1,elem(top_left, 1)+1},
         size,
       }
-    end)
+    end, timeout: 300_000)
   end
 end
 
@@ -74,16 +74,13 @@ grid_serial_number = 2694
 grid = Day11.generate_power_levels(grid_serial_number)
 coords = Day11.generate_coords()
 
-list_of_list_of_tuples = Enum.map(coords, fn coord ->
+Enum.map(coords, fn coord ->
   squares = Day11.generate_squares(coord)
-  Enum.to_list(Day11.generate_power_levels(grid, squares))
-end)
+  tuples = Enum.to_list(Day11.generate_power_levels(grid, squares))
 
-flattened_tuples = Enum.reduce(list_of_list_of_tuples, [], fn list_of_tuples, acc ->
-  acc ++ list_of_tuples
-end)
+  {:ok, {square, {top_left_x, top_left_y}, square_size}} = Enum.max_by(tuples, fn {:ok, {power_levels, _, _}} ->
+    Enum.sum(power_levels)
+  end)
 
-{:ok, {square, {top_left_x, top_left_y}, square_size}} = Enum.max_by(flattened_tuples, fn {:ok, {power_levels, _, _}} ->
-  Enum.sum(power_levels)
+  File.write!("output", "#{top_left_x},#{top_left_y},#{square_size} - power level: #{Enum.sum(square)}\n", [:append])
 end)
-IO.puts("#{top_left_x},#{top_left_y},#{square_size}: #{Enum.sum(square)}")
