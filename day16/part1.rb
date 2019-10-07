@@ -225,6 +225,7 @@ end
 
 operations = Operations.constants.reject { |o| o == :Base }.map { |o| Object.const_get("Operations::#{o}") }
 answer = 0
+opcode_results = []
 
 input = File.read('input.txt').strip.split("\n").reject { |line| line.empty? }
 input.each_slice(3) do |lines|
@@ -241,6 +242,49 @@ input.each_slice(3) do |lines|
   if matching_operations.count >= 3
     answer += 1
   end
+
+  opcode_results << [inputs.first, matching_operations]
 end
 
-puts "Answer: #{answer}"
+OPCODES_TO_OPERATION = {
+  0 => Operations::Seti,
+  1 => Operations::Eqir,
+  2 => Operations::Setr,
+  3 => Operations::Gtir,
+  4 => Operations::Addi,
+  5 => Operations::Muli,
+  6 => Operations::Mulr,
+  7 => Operations::Gtrr,
+  8 => Operations::Bani,
+  9 => Operations::Gtri,
+  10 => Operations::Bori,
+  11 => Operations::Banr,
+  12 => Operations::Borr,
+  13 => Operations::Eqri,
+  14 => Operations::Eqrr,
+  15 => Operations::Addr,
+}
+
+opcode_results.group_by { |opcode, _| opcode }.each do |opcode, results|
+  next if OPCODES_TO_OPERATION[opcode]
+
+  result_sets = results.map { |_, result| result - OPCODES_TO_OPERATION.values }
+  union = result_sets.reduce { |a, b| a & b }
+  if union.count == 1
+    puts "#{opcode} => #{union.first}"
+  end
+end
+
+puts "Part 1 Answer: #{answer}"
+
+input2 = File.read('input2.txt').strip.split("\n")
+registers = Registers.from_array([0, 0, 0, 0])
+input2.each do |line|
+  inputs = line.split(" ").map(&:to_i)
+  registers = OPCODES_TO_OPERATION[inputs.first].call(
+    registers: registers,
+    inputs: inputs,
+  )
+end
+
+puts registers.inspect
