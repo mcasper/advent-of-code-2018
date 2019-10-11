@@ -43,6 +43,10 @@ class Cart
       self.x += 1
     end
 
+    if self.x < 0 || self.y < 0
+      require "pry"; binding.pry
+    end
+
     case next_piece
     when "|", "-"
       # nothing
@@ -125,7 +129,7 @@ def sort_by_coordinates(carts)
   carts.sort_by { |cart| [cart.y, cart.x] }
 end
 
-lines = File.read("input.txt").strip.split("\n")
+lines = File.read("input.txt").split("\n")
 
 grid = lines.map(&:chars)
 carts = []
@@ -167,12 +171,27 @@ crash = nil
 i = 0
 
 while crash.nil?
+  if i % 10_000_000
+    puts "Grid size: #{grid.count}x#{grid.first.count}"
+    puts "Card coordinates:"
+    carts.each { |cart| puts "  #{cart.x},#{cart.y}" }
+  end
+
   sort_by_coordinates(carts).each do |cart|
     i += 1
+    if !carts.include?(cart)
+      next
+    end
+
     cart.move(grid)
 
+    if carts.count == 1
+      raise "The last cart is at #{cart.x},#{cart.y}: #{cart.inspect}"
+    end
+
     if cart.crashed?(carts)
-      raise "Crash at #{cart.x},#{cart.y}"
+      # raise "First crash at #{cart.x},#{cart.y}"
+      carts = carts.reject { |other_cart| cart.y == other_cart.y && cart.x == other_cart.x }
     end
   end
 end
